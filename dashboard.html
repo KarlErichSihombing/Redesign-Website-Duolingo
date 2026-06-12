@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Duolingo Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+/* ===== DASHBOARD LAYOUT (3-col) ===== */
+.layout {
+  display: grid;
+  grid-template-columns: var(--sidebar) 1fr 280px;
+  grid-template-rows: 1fr auto;
+  grid-template-areas: "sidebar main right" "footer footer footer";
+  margin-top: var(--hh);
+  min-height: calc(100vh - var(--hh));
+  max-width: 1170px;
+  margin-left: auto; margin-right: auto;
+}
+
+/* Left sidebar */
+.sidebar-left {
+  grid-area: sidebar;
+  position: sticky; top: var(--hh);
+  height: calc(100vh - var(--hh));
+  padding: 24px 16px;
+  display: flex; flex-direction: column; gap: 8px;
+  overflow-y: auto;
+  border-right: 2px solid var(--border);
+  background: var(--snow);
+}
+/* Reuse sidenav nav-item styles but scoped to sidebar-left */
+.sidebar-left .nav-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 16px; border-radius: var(--rs);
+  font-weight: 700; font-size: .95rem; color: var(--eel);
+  cursor: pointer; position: relative;
+  transition: background .15s, color .15s, transform .15s;
+}
+.sidebar-left .nav-item:hover { background:#f0fde0; color:var(--green); transform:translateX(3px); }
+.sidebar-left .nav-item.active {
+  background: linear-gradient(135deg,#f0fde0,#e8f9d0);
+  color: var(--green); border-left: 3px solid var(--green);
+}
+.sidebar-left .nav-item.active::after {
+  content:''; position:absolute; right:12px;
+  width:8px; height:8px; background:var(--green); border-radius:50%;
+}
+.nav-section-label {
+  font-size:.7rem; font-weight:800; color:var(--muted);
+  text-transform:uppercase; letter-spacing:1px; padding:8px 12px 4px;
+}
+.nav-icon { font-size:1.3rem; width:24px; text-align:center; }
+.sidebar-footer { margin-top:auto; padding-top:16px; border-top:2px solid var(--border); }
+
+/* Main */
+main { grid-area: main; padding: 28px 24px; display:flex; flex-direction:column; gap:24px; }
+
+/* Right sidebar */
+.sidebar-right {
+  grid-area: right;
+  position: sticky; top: var(--hh);
+  height: calc(100vh - var(--hh));
+  padding: 24px 16px;
+  display: flex; flex-direction: column; gap: 16px;
+  overflow-y: auto;
+  border-left: 2px solid var(--border);
+  background: var(--snow);
+}
+
+/* Unit banner */
+.unit-banner {
+  background: linear-gradient(135deg, var(--green) 0%, var(--green-lt) 100%);
+  border-radius: var(--r); padding: 28px 32px;
+  display: flex; align-items: center; justify-content: space-between; gap: 20px;
+  box-shadow: 0 4px 20px rgba(88,204,2,.25);
+  position: relative; overflow: hidden;
+  animation: fadeDown .5s ease-out;
+}
+.unit-banner::before {
+  content:''; position:absolute; top:-30px; right:-30px;
+  width:180px; height:180px; background:rgba(255,255,255,.1); border-radius:50%;
+}
+.unit-banner::after {
+  content:''; position:absolute; bottom:-50px; right:80px;
+  width:120px; height:120px; background:rgba(255,255,255,.07); border-radius:50%;
+}
+.banner-label { font-size:.75rem; font-weight:800; color:rgba(255,255,255,.8); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:6px; }
+.banner-title { font-size:1.5rem; font-weight:900; color:white; margin-bottom:6px; line-height:1.2; }
+.banner-subtitle { font-size:.88rem; color:rgba(255,255,255,.85); font-weight:600; }
+.banner-owl { font-size:4rem; z-index:1; animation:float 3s ease-in-out infinite; filter:drop-shadow(0 4px 8px rgba(0,0,0,.15)); }
+.banner-text, .unit-banner .btn-primary { z-index:1; }
+
+/* XP Bar */
+.xp-bar-wrap {
+  display:flex; align-items:center; gap:10px;
+  padding:10px 14px; background:var(--card);
+  border-radius:var(--rs); border:2px solid var(--border);
+}
+.xp-label { font-size:.78rem; font-weight:800; color:var(--green); flex-shrink:0; }
+.xp-track { flex:1; height:10px; background:#e8e8e8; border-radius:5px; overflow:hidden; }
+.xp-fill {
+  height:100%; background:linear-gradient(90deg,var(--green),var(--green-lt));
+  border-radius:5px; width:65%;
+  animation: growBar 1s ease-out .3s both;
+}
+.xp-val { font-size:.78rem; font-weight:800; color:var(--muted); flex-shrink:0; }
+
+/* Learning path */
+.learning-path { display:flex; flex-direction:column; align-items:center; gap:12px; padding:8px 0; }
+.path-unit { width:100%; display:flex; flex-direction:column; gap:12px; }
+.path-unit-header {
+  display:flex; align-items:center; gap:12px; padding:12px 16px;
+  background:linear-gradient(135deg,#f0fde0,#f8fff0);
+  border-radius:var(--rs); border-left:4px solid var(--green);
+}
+.unit-num {
+  width:32px; height:32px; background:var(--green); color:white;
+  border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-weight:900; font-size:.85rem; flex-shrink:0;
+}
+.unit-name { font-weight:800; font-size:.95rem; }
+.unit-desc { font-size:.78rem; color:var(--muted); font-weight:600; }
+.unit-stars { color:var(--bee); font-size:.85rem; }
+.lessons-row { display:flex; flex-wrap:wrap; gap:12px; padding:4px 8px; justify-content:center; }
+.lesson-node { display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; }
+.lesson-circle {
+  width:56px; height:56px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.5rem; position:relative;
+  transition:transform .15s, box-shadow .15s;
+  border:3px solid transparent;
+}
+.lesson-circle:hover { transform:scale(1.1); }
+.lesson-done   { background:var(--green);  box-shadow:0 4px 0 #45a800; border-color:#45a800; }
+.lesson-active { background:var(--blue);   box-shadow:0 4px 0 #0e8fc9; border-color:#0e8fc9; animation:pulse 2s ease-in-out infinite; }
+.lesson-locked { background:#e5e5e5; box-shadow:0 4px 0 #c0c0c0; border-color:#c0c0c0; filter:grayscale(.3); }
+.lesson-label  { font-size:.72rem; font-weight:700; color:var(--muted); text-align:center; max-width:60px; }
+
+/* Stats grid */
+.stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.stat-card {
+  background:var(--card); border:2px solid var(--border); border-radius:var(--rs);
+  padding:14px 12px; text-align:center; transition:transform .15s; cursor:default;
+}
+.stat-card:hover { transform:translateY(-2px); box-shadow:var(--shadow); }
+.stat-big { font-size:1.6rem; font-weight:900; }
+.stat-small { font-size:.75rem; color:var(--muted); font-weight:700; margin-top:2px; }
+.stat-card.green .stat-big { color:var(--green); }
+.stat-card.blue  .stat-big { color:var(--blue); }
+.stat-card.orange .stat-big { color:var(--fox); }
+.stat-card.purple .stat-big { color:var(--beetle); }
+
+/* Mini bar chart */
+.mini-chart { display:flex; align-items:flex-end; gap:6px; height:50px; padding:4px 0; }
+.bar-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; height:100%; justify-content:flex-end; }
+.bar-fill { width:100%; border-radius:4px 4px 0 0; background:var(--green); transition:height 1s ease-out; min-height:4px; }
+.bar-fill.today { background:var(--blue); }
+.bar-label { font-size:.6rem; color:var(--muted); font-weight:700; }
+
+/* News card */
+.news-card {
+  background:var(--card); border-radius:var(--r); padding:18px 20px;
+  border:2px solid var(--border); display:flex; align-items:flex-start; gap:14px;
+  transition:transform .15s, box-shadow .15s; animation:fadeUp .4s ease-out both;
+}
+.news-card:hover { transform:translateY(-2px); box-shadow:var(--shadow); }
+.news-icon { width:44px; height:44px; border-radius:var(--rs); display:flex; align-items:center; justify-content:center; font-size:1.4rem; flex-shrink:0; }
+.news-icon.green  { background:#f0fde0; }
+.news-icon.blue   { background:#e8f4ff; }
+.news-icon.yellow { background:#fff9e0; }
+.news-tag  { font-size:.68rem; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:var(--green); margin-bottom:3px; }
+.news-title { font-size:.9rem; font-weight:800; margin-bottom:3px; }
+.news-desc  { font-size:.8rem; color:var(--muted); font-weight:600; line-height:1.4; }
+.news-date  { font-size:.72rem; color:#aaa; font-weight:600; margin-top:5px; }
+
+/* Mission items */
+.mission-item { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--border); }
+.mission-item:last-child { border-bottom:none; }
+.mission-icon { font-size:1.2rem; width:28px; text-align:center; }
+.mission-info { flex:1; }
+.mission-name { font-size:.82rem; font-weight:700; }
+.mission-progress { font-size:.72rem; color:var(--muted); font-weight:600; }
+.mission-bar { height:6px; background:#e8e8e8; border-radius:3px; overflow:hidden; margin-top:3px; }
+.mission-fill { height:100%; border-radius:3px; }
+.mission-xp { font-size:.75rem; font-weight:800; color:var(--bee); padding:2px 6px; background:#fff9e0; border-radius:6px; }
+
+/* League widget */
+.league-badge { display:flex; flex-direction:column; align-items:center; padding:12px 0 8px; gap:4px; }
+.league-icon { font-size:2.5rem; }
+.league-name { font-weight:900; font-size:.9rem; }
+.league-rank { font-size:.78rem; color:var(--muted); font-weight:600; }
+.leaderboard-mini { display:flex; flex-direction:column; gap:4px; }
+.lb-row-mini {
+  display:flex; align-items:center; gap:8px; padding:5px 8px;
+  border-radius:8px; font-size:.8rem; font-weight:700; transition:background .15s;
+}
+.lb-row-mini:hover { background:var(--bg); }
+.lb-row-mini.me { background:#f0fde0; color:var(--green); }
+.lb-row-mini .lb-rank { width:18px; font-size:.78rem; }
+.lb-av-sm {
+  width:24px; height:24px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:.7rem; font-weight:800; color:white; flex-shrink:0;
+}
+.lb-row-mini .lb-xp { font-size:.75rem; color:var(--muted); margin-left:auto; }
+
+/* Store promo */
+.promo-card {
+  background:linear-gradient(135deg,#ce82ff22,#2b70c922);
+  border-radius:var(--rs); padding:14px;
+  display:flex; align-items:center; gap:10px;
+  cursor:pointer; transition:transform .15s;
+  border:1px solid #ce82ff44;
+}
+.promo-card:hover { transform:scale(1.02); }
+.promo-icon { font-size:2rem; }
+.promo-title { font-size:.85rem; font-weight:800; }
+.promo-desc { font-size:.75rem; color:var(--muted); font-weight:600; }
+.promo-badge { background:var(--red); color:white; font-size:.68rem; font-weight:800; padding:2px 6px; border-radius:6px; }
+
+/* Responsive overrides */
+@media (max-width: 1024px) {
+  .layout { grid-template-columns: 72px 1fr 240px; }
+  .sidebar-left .nav-item span:not(.nav-icon) { display:none; }
+  .sidebar-left .nav-item { justify-content:center; padding:12px 8px; }
+  .sidebar-left .nav-item.active::after { display:none; }
+  .nav-section-label { display:none; }
+  .nav-icon { width:auto; font-size:1.4rem; }
+}
+@media (max-width: 768px) {
+  .layout { grid-template-columns:1fr; grid-template-areas:"main" "footer"; }
+  .sidebar-left, .sidebar-right { display:none; }
+  .sidebar-left.open {
+    display:flex; position:fixed; top:var(--hh); left:0;
+    width:260px; z-index:99; height:calc(100vh - var(--hh));
+    box-shadow:8px 0 24px rgba(0,0,0,.15);
+  }
+  main { padding:16px; gap:16px; }
+  .unit-banner { padding:20px; flex-wrap:wrap; }
+  .banner-owl { font-size:3rem; }
+  .banner-title { font-size:1.2rem; }
+  .lessons-row { gap:8px; }
+  .lesson-circle { width:48px; height:48px; font-size:1.2rem; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <button class="hamburger" id="hamburgerBtn" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="logo">
+    <img class="logo-icon" src="image/logo.png" alt="Duolingo Logo">
+    <span>Duolingo</span>
+  </div>
+  <div class="search-wrap">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2.5">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    </svg>
+    <input type="text" placeholder="Cari kursus bahasa...">
+  </div>
+  <div class="hstats">
+    <div class="chip chip-fire">🔥 <span>14</span> <span class="chip-lbl">Hari</span></div>
+    <div class="chip chip-heart">❤️ <span>5</span> <span class="chip-lbl">Nyawa</span></div>
+    <div class="chip chip-gem">💎 <span>320</span> <span class="chip-lbl">Permata</span></div>
+    <div class="flag-btn" title="Bahasa: Inggris">🇬🇧</div>
+  </div>
+</header>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<div class="layout">
+
+  <!-- LEFT SIDEBAR -->
+  <nav class="sidebar-left" id="sidebarLeft">
+    <div class="nav-section-label">Menu Utama</div>
+    <div class="nav-item active" onclick="setActive(this)"><span class="nav-icon">🏠</span><span>Beranda</span></div>
+    <div class="nav-item" onclick="setActive(this)"><span class="nav-icon">🎯</span><span>Misi</span></div>
+    <div class="nav-item" onclick="setActive(this)"><span class="nav-icon">🏆</span><span>Leaderboard</span></div>
+    <div class="nav-item" onclick="setActive(this)"><span class="nav-icon">👤</span><span>Profil</span></div>
+    <div class="nav-item" onclick="setActive(this)"><span class="nav-icon">🛒</span><span>Toko</span></div>
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">Lainnya</div>
+    <div class="nav-item sidebar-footer" onclick="setActive(this)"><span class="nav-icon">❓</span><span>Bantuan</span></div>
+    <div class="nav-item" onclick="setActive(this)"><span class="nav-icon">⚙️</span><span>Pengaturan</span></div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main>
+
+    <!-- Unit Banner -->
+    <div class="unit-banner">
+      <div class="banner-text">
+        <div class="banner-label">Unit Aktif · Sesi 3 dari 5</div>
+        <div class="banner-title">Percakapan Sehari-hari</div>
+        <div class="banner-subtitle">Bahasa Inggris · Tingkat Menengah</div>
+      </div>
+      <div class="banner-owl">🦉</div>
+      <button class="btn-primary">▶ Lanjutkan</button>
+    </div>
+
+    <!-- XP Progress -->
+    <div>
+      <div class="section-header">
+        <div class="section-title">⚡ XP Hari Ini</div>
+        <div class="section-link">Target: 50 XP</div>
+      </div>
+      <div class="xp-bar-wrap">
+        <span class="xp-label">32 XP</span>
+        <div class="xp-track"><div class="xp-fill"></div></div>
+        <span class="xp-val">50 XP</span>
+      </div>
+    </div>
+
+    <!-- Learning Path -->
+    <div>
+      <div class="section-header">
+        <div class="section-title">🗺️ Jalur Belajar</div>
+        <div class="section-link">Lihat semua →</div>
+      </div>
+      <div class="learning-path">
+
+        <!-- Unit 1 (done) -->
+        <div class="path-unit">
+          <div class="path-unit-header">
+            <div class="unit-num">1</div>
+            <div class="unit-info">
+              <div class="unit-name">Salam & Perkenalan</div>
+              <div class="unit-desc">Dasar percakapan sehari-hari</div>
+            </div>
+            <div class="unit-stars">⭐⭐⭐</div>
+          </div>
+          <div class="lessons-row">
+            <div class="lesson-node"><div class="lesson-circle lesson-done">✓</div><div class="lesson-label">Halo</div></div>
+            <div class="lesson-node"><div class="lesson-circle lesson-done">✓</div><div class="lesson-label">Nama</div></div>
+            <div class="lesson-node"><div class="lesson-circle lesson-done">✓</div><div class="lesson-label">Asal</div></div>
+            <div class="lesson-node"><div class="lesson-circle lesson-done">🏅</div><div class="lesson-label">Kuis</div></div>
+          </div>
+        </div>
+
+        <!-- Unit 2 (active) -->
+        <div class="path-unit">
+          <div class="path-unit-header" style="border-color:var(--blue);background:linear-gradient(135deg,#e8f4ff,#f0f9ff)">
+            <div class="unit-num" style="background:var(--blue)">2</div>
+            <div class="unit-info">
+              <div class="unit-name">Percakapan Sehari-hari</div>
+              <div class="unit-desc">Sedang berjalan · 3/5 selesai</div>
+            </div>
+            <div class="unit-stars">⭐⭐</div>
+          </div>
+          <div class="lessons-row">
+            <div class="lesson-node"><div class="lesson-circle lesson-done">✓</div><div class="lesson-label">Cuaca</div></div>
+            <div class="lesson-node"><div class="lesson-circle lesson-done">✓</div><div class="lesson-label">Waktu</div></div>
+            <div class="lesson-node"><div class="lesson-circle lesson-done">✓</div><div class="lesson-label">Hobi</div></div>
+            <div class="lesson-node"><div class="lesson-circle lesson-active">▶</div><div class="lesson-label">Kerja</div></div>
+            <div class="lesson-node"><div class="lesson-circle lesson-locked">🔒</div><div class="lesson-label">Kuis</div></div>
+          </div>
+        </div>
+
+        <!-- Unit 3 (locked) -->
+        <div class="path-unit">
+          <div class="path-unit-header" style="border-color:#ccc;background:#f9f9f9;opacity:.7">
+            <div class="unit-num" style="background:#ccc">3</div>
+            <div class="unit-info">
+              <div class="unit-name">Perjalanan & Transportasi</div>
+              <div class="unit-desc">Terkunci — selesaikan Unit 2 dulu</div>
+            </div>
+            <div class="unit-stars" style="color:#ccc">⭐⭐⭐</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div>
+      <div class="section-header">
+        <div class="section-title">📊 Statistik Belajarmu</div>
+        <div class="section-link">Detail →</div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card green"><div class="stat-big">1,240</div><div class="stat-small">Total XP</div></div>
+        <div class="stat-card blue"><div class="stat-big">14</div><div class="stat-small">Streak Hari</div></div>
+        <div class="stat-card orange"><div class="stat-big">87%</div><div class="stat-small">Akurasi Rata-rata</div></div>
+        <div class="stat-card purple"><div class="stat-big">23</div><div class="stat-small">Sesi Selesai</div></div>
+      </div>
+      <div style="margin-top:12px;background:white;border:2px solid var(--border);border-radius:var(--rs);padding:14px 16px;">
+        <div style="font-size:.78rem;font-weight:800;color:var(--muted);margin-bottom:8px;">XP 7 Hari Terakhir</div>
+        <div class="mini-chart">
+          <div class="bar-col"><div class="bar-fill" style="height:40%"></div><div class="bar-label">Sen</div></div>
+          <div class="bar-col"><div class="bar-fill" style="height:70%"></div><div class="bar-label">Sel</div></div>
+          <div class="bar-col"><div class="bar-fill" style="height:55%"></div><div class="bar-label">Rab</div></div>
+          <div class="bar-col"><div class="bar-fill" style="height:90%"></div><div class="bar-label">Kam</div></div>
+          <div class="bar-col"><div class="bar-fill" style="height:45%"></div><div class="bar-label">Jum</div></div>
+          <div class="bar-col"><div class="bar-fill" style="height:80%"></div><div class="bar-label">Sab</div></div>
+          <div class="bar-col"><div class="bar-fill today" style="height:64%"></div><div class="bar-label">Hari ini</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- News -->
+    <div>
+      <div class="section-header">
+        <div class="section-title">📢 Berita & Update</div>
+        <div class="section-link">Semua →</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div class="news-card" style="animation-delay:.1s">
+          <div class="news-icon green">🎉</div>
+          <div class="news-content">
+            <div class="news-tag">Fitur Baru</div>
+            <div class="news-title">Duolingo Stories kini tersedia dalam Bahasa Indonesia!</div>
+            <div class="news-desc">Baca cerita pendek interaktif dan tingkatkan pemahamanmu secara kontekstual.</div>
+            <div class="news-date">5 Juni 2026</div>
+          </div>
+        </div>
+        <div class="news-card" style="animation-delay:.2s">
+          <div class="news-icon yellow">⚡</div>
+          <div class="news-content">
+            <div class="news-tag">Event Mingguan</div>
+            <div class="news-title">XP Double Weekend — Raih 2x XP mulai Sabtu!</div>
+            <div class="news-desc">Kesempatan terbatas. Mainkan lebih banyak sesi untuk naik peringkat liga.</div>
+            <div class="news-date">7 Juni 2026</div>
+          </div>
+        </div>
+        <div class="news-card" style="animation-delay:.3s">
+          <div class="news-icon blue">🔬</div>
+          <div class="news-content">
+            <div class="news-tag">Pembaruan</div>
+            <div class="news-title">Algoritma adaptif baru — belajar lebih personal</div>
+            <div class="news-desc">Sistem kini menyesuaikan latihan berdasarkan pola kesalahanmu secara real-time.</div>
+            <div class="news-date">1 Juni 2026</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- RIGHT SIDEBAR -->
+  <aside class="sidebar-right">
+
+    <!-- Daily Mission -->
+    <div class="widget-card">
+      <div class="widget-header green">🎯 Misi Harian</div>
+      <div class="widget-body">
+        <div class="mission-item">
+          <div class="mission-icon">⚡</div>
+          <div class="mission-info">
+            <div class="mission-name">Raih 20 XP</div>
+            <div class="mission-progress">32 / 20 XP</div>
+            <div class="mission-bar"><div class="mission-fill" style="width:100%;background:var(--green)"></div></div>
+          </div>
+          <div class="mission-xp">✓</div>
+        </div>
+        <div class="mission-item">
+          <div class="mission-icon">🎤</div>
+          <div class="mission-info">
+            <div class="mission-name">3 Latihan Bicara</div>
+            <div class="mission-progress">2 / 3 sesi</div>
+            <div class="mission-bar"><div class="mission-fill" style="width:66%;background:var(--blue)"></div></div>
+          </div>
+          <div class="mission-xp">+10</div>
+        </div>
+        <div class="mission-item">
+          <div class="mission-icon">❤️</div>
+          <div class="mission-info">
+            <div class="mission-name">Tanpa Kesalahan</div>
+            <div class="mission-progress">0 / 1 sesi</div>
+            <div class="mission-bar"><div class="mission-fill" style="width:0%;background:var(--red)"></div></div>
+          </div>
+          <div class="mission-xp">+15</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- League -->
+    <div class="widget-card">
+      <div class="widget-header blue">🏆 Liga Perunggu</div>
+      <div class="widget-body">
+        <div class="league-badge">
+          <div class="league-icon">🥉</div>
+          <div class="league-name">Liga Perunggu</div>
+          <div class="league-rank">Peringkat #4 dari 30</div>
+        </div>
+        <div class="leaderboard-mini">
+          <div class="lb-row-mini"><span class="lb-rank">1</span><div class="lb-av-sm" style="background:#FFC800">A</div><span>Andi_R</span><span class="lb-xp">580 XP</span></div>
+          <div class="lb-row-mini"><span class="lb-rank">2</span><div class="lb-av-sm" style="background:#FF4B4B">S</div><span>Siti_L</span><span class="lb-xp">470 XP</span></div>
+          <div class="lb-row-mini"><span class="lb-rank">3</span><div class="lb-av-sm" style="background:#CE82FF">B</div><span>Budi_W</span><span class="lb-xp">390 XP</span></div>
+          <div class="lb-row-mini me"><span class="lb-rank">4</span><div class="lb-av-sm" style="background:#58cc02">K</div><span>Kamu ⬅</span><span class="lb-xp">320 XP</span></div>
+          <div class="lb-row-mini"><span class="lb-rank">5</span><div class="lb-av-sm" style="background:#1CB0F6">D</div><span>Dani_P</span><span class="lb-xp">290 XP</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Store Promo -->
+    <div class="widget-card">
+      <div class="widget-header yellow">🛒 Promo Toko</div>
+      <div class="widget-body" style="display:flex;flex-direction:column;gap:10px;">
+        <div class="promo-card">
+          <div class="promo-icon">💎</div>
+          <div class="promo-info"><div class="promo-title">Paket Permata 500</div><div class="promo-desc">Hemat untuk item premium</div></div>
+          <div class="promo-badge">-20%</div>
+        </div>
+        <div class="promo-card">
+          <div class="promo-icon">🛡️</div>
+          <div class="promo-info"><div class="promo-title">Streak Shield</div><div class="promo-desc">Lindungi streak kamu</div></div>
+          <div class="promo-badge">Hot</div>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="ft-logo">🦉 duolingo</div>
+    <div class="ft-links">
+      <span class="ft-link">📧 e-Complaint</span>
+      <span class="ft-link">ℹ️ Tentang Kami</span>
+      <span class="ft-link">📄 Syarat & Ketentuan</span>
+      <span class="ft-link">🔒 Privasi</span>
+    </div>
+    <div class="ft-socials">
+      <div class="ft-soc">🐦</div><div class="ft-soc">📘</div><div class="ft-soc">📸</div><div class="ft-soc">▶️</div>
+    </div>
+    <div class="ft-copy">© 2026 Duolingo Redesign Concept — Dibuat dengan ❤️ untuk pembelajaran bahasa</div>
+  </footer>
+
+</div>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="mobile-nav">
+  <div class="mobile-nav-item active"><span class="mn-icon">🏠</span><span>Beranda</span></div>
+  <div class="mobile-nav-item"><span class="mn-icon">🎯</span><span>Misi</span></div>
+  <div class="mobile-nav-item"><span class="mn-icon">🏆</span><span>Liga</span></div>
+  <div class="mobile-nav-item"><span class="mn-icon">👤</span><span>Profil</span></div>
+  <div class="mobile-nav-item"><span class="mn-icon">🛒</span><span>Toko</span></div>
+</nav>
+
+<script src="script.js"></script>
+<script>
+  function setActive(el) {
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  // Animate news cards on scroll
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.style.animationPlayState = 'running'; });
+  });
+  document.querySelectorAll('.news-card').forEach(c => observer.observe(c));
+</script>
+</body>
+</html>

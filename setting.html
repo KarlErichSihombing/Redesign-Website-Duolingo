@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Duolingo — Pengaturan</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+/* ===== SETTINGS-SPECIFIC ===== */
+
+/* Profile card */
+.profile-card {
+  background:linear-gradient(135deg,#0f3460 0%,#16213e 60%,#1a1a2e 100%);
+  border-radius:var(--r); padding:28px 32px;
+  display:flex; align-items:center; gap:24px;
+  position:relative; overflow:hidden;
+  box-shadow:0 6px 24px rgba(0,0,0,.18);
+  animation:fadeDown .45s ease-out;
+}
+.profile-card::before {
+  content:''; position:absolute; inset:0;
+  background:radial-gradient(circle at 90% 50%,rgba(88,204,2,.14) 0%,transparent 65%);
+  pointer-events:none;
+}
+.pc-avatar-wrap { position:relative; flex-shrink:0; z-index:1; }
+.pc-avatar {
+  width:80px; height:80px; border-radius:50%;
+  background:linear-gradient(135deg,var(--green),var(--green-lt));
+  display:flex; align-items:center; justify-content:center;
+  font-size:2rem; font-weight:900; color:#fff;
+  border:4px solid rgba(255,255,255,.25);
+  box-shadow:0 4px 16px rgba(0,0,0,.25);
+  cursor:pointer; transition:transform .2s;
+}
+.pc-avatar:hover { transform:scale(1.05); }
+.pc-avatar-edit {
+  position:absolute; bottom:0; right:0;
+  width:26px; height:26px; border-radius:50%;
+  background:var(--green); border:2px solid #fff;
+  display:flex; align-items:center; justify-content:center;
+  font-size:.75rem; cursor:pointer;
+  box-shadow:0 2px 8px rgba(0,0,0,.2); transition:transform .15s;
+}
+.pc-avatar-edit:hover { transform:scale(1.15); }
+.pc-info { flex:1; z-index:1; }
+.pc-greeting { font-size:.7rem; font-weight:800; letter-spacing:1.5px; text-transform:uppercase; color:var(--green); margin-bottom:4px; }
+.pc-name { font-size:1.7rem; font-weight:900; color:#fff; line-height:1.1; margin-bottom:6px; }
+.pc-username { font-size:.85rem; color:rgba(255,255,255,.55); font-weight:700; margin-bottom:10px; }
+.pc-badges { display:flex; gap:8px; flex-wrap:wrap; }
+.pc-badge {
+  display:flex; align-items:center; gap:5px;
+  padding:4px 10px; border-radius:16px;
+  background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.15);
+  font-size:.75rem; font-weight:800; color:rgba(255,255,255,.8);
+}
+.pc-stats { display:flex; flex-direction:column; gap:8px; z-index:1; flex-shrink:0; }
+.pc-stat {
+  display:flex; align-items:center; gap:8px; padding:8px 14px; border-radius:var(--rs);
+  background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12);
+  font-size:.82rem; font-weight:800; color:rgba(255,255,255,.85); min-width:140px;
+}
+.pc-stat-val { font-size:1.1rem; font-weight:900; color:#fff; }
+.pc-edit-btn {
+  z-index:1; flex-shrink:0; padding:10px 22px; border-radius:24px;
+  background:var(--green); color:#fff;
+  font-family:'Nunito',sans-serif; font-weight:800; font-size:.88rem;
+  border:none; cursor:pointer; box-shadow:0 4px 0 var(--green-dk);
+  transition:transform .15s, box-shadow .15s;
+  text-transform:uppercase; letter-spacing:.5px; align-self:flex-start;
+}
+.pc-edit-btn:hover { transform:translateY(-2px); box-shadow:0 6px 0 var(--green-dk); }
+.pc-edit-btn:active { transform:translateY(1px); box-shadow:0 2px 0 var(--green-dk); }
+
+/* Settings panel */
+.settings-panel {
+  background:var(--card); border:2px solid var(--border); border-radius:var(--r);
+  overflow:hidden; box-shadow:var(--shadow); animation:fadeUp .45s ease-out .1s both;
+}
+.sp-tabs {
+  display:flex; border-bottom:2px solid var(--border);
+  overflow-x:auto; scrollbar-width:none; background:#fafafa; padding:0 4px;
+}
+.sp-tabs::-webkit-scrollbar { display:none; }
+.sp-tab {
+  display:flex; align-items:center; gap:7px;
+  padding:16px 24px; font-size:.9rem; font-weight:800;
+  color:var(--muted); cursor:pointer; white-space:nowrap;
+  border-bottom:3px solid transparent;
+  transition:color .2s, border-color .2s;
+  flex-shrink:0; margin-bottom:-2px;
+}
+.sp-tab:hover { color:var(--text); }
+.sp-tab.active { color:var(--green); border-bottom-color:var(--green); }
+.sp-pane { display:none; }
+.sp-pane.active { display:block; }
+
+/* Setting sections & rows */
+.set-section { padding:26px 32px; border-bottom:1px solid #f0f0f0; }
+.set-section:last-child { border-bottom:none; }
+.set-section-title {
+  font-size:.75rem; font-weight:900; text-transform:uppercase;
+  letter-spacing:1.2px; color:var(--muted); margin-bottom:16px;
+  display:flex; align-items:center; gap:8px;
+}
+.set-section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+.set-row {
+  display:flex; align-items:center; gap:18px;
+  padding:14px 0; border-bottom:1px solid #f7f7f7; transition:background .15s;
+}
+.set-row:last-child { border-bottom:none; }
+.set-row:hover { background:#fafcf8; border-radius:var(--rs); padding-left:10px; padding-right:10px; margin:0 -10px; }
+.set-row-icon { width:46px; height:46px; border-radius:var(--rs); display:flex; align-items:center; justify-content:center; font-size:1.35rem; flex-shrink:0; }
+.set-row-icon.green  { background:#f0fde0; }
+.set-row-icon.blue   { background:#e8f4ff; }
+.set-row-icon.purple { background:#f3e8ff; }
+.set-row-icon.orange { background:#fff4e0; }
+.set-row-icon.red    { background:#fff0f0; }
+.set-row-icon.gray   { background:#f5f5f5; }
+.set-row-info { flex:1; }
+.set-row-label { font-size:.98rem; font-weight:800; margin-bottom:3px; }
+.set-row-desc  { font-size:.8rem; color:var(--muted); font-weight:600; line-height:1.4; }
+.set-row-control { flex-shrink:0; }
+
+/* Radio group */
+.radio-group { display:flex; gap:8px; flex-wrap:wrap; }
+.radio-opt {
+  display:flex; align-items:center; gap:6px; padding:8px 16px; border-radius:20px;
+  border:2px solid var(--border); cursor:pointer;
+  font-size:.88rem; font-weight:700; color:var(--muted); transition:all .2s;
+}
+.radio-opt input { display:none; }
+.radio-opt.checked { border-color:var(--green); background:#f0fde0; color:var(--green); }
+
+/* XP goals */
+.xp-goals { display:flex; gap:10px; }
+.xp-goal {
+  flex:1; padding:12px 8px; border:2px solid var(--border);
+  border-radius:var(--rs); text-align:center; cursor:pointer; transition:all .2s;
+}
+.xp-goal:hover { border-color:var(--green-lt); }
+.xp-goal.active { border-color:var(--green); background:#f0fde0; }
+.xp-goal-num { font-size:1.35rem; font-weight:900; color:var(--green); }
+.xp-goal-lbl { font-size:.7rem; font-weight:800; color:var(--muted); text-transform:uppercase; margin-top:2px; }
+
+/* Notification categories */
+.notif-category { background:#fafafa; border-radius:var(--rs); padding:16px 18px; margin-bottom:12px; border:1px solid var(--border); }
+.notif-cat-hd { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.notif-cat-title { font-size:.92rem; font-weight:900; }
+.notif-cat-rows { display:flex; flex-direction:column; gap:4px; }
+.notif-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:9px 0; border-top:1px solid #efefef; font-size:.88rem; font-weight:700;
+}
+.notif-row:first-child { border-top:none; }
+
+/* Connected accounts */
+.connected-row { display:flex; align-items:center; gap:16px; padding:14px 0; border-bottom:1px solid #f7f7f7; }
+.connected-row:last-child { border-bottom:none; }
+.conn-logo { width:46px; height:46px; border-radius:var(--rs); display:flex; align-items:center; justify-content:center; font-size:1.4rem; border:2px solid var(--border); flex-shrink:0; }
+.conn-name { font-size:.96rem; font-weight:800; }
+.conn-status { font-size:.78rem; color:var(--muted); font-weight:600; }
+.conn-status.ok { color:var(--green); }
+.conn-info { flex:1; }
+
+/* Danger zone */
+.danger-zone { margin:24px 32px; padding:20px 22px; border-radius:var(--rs); background:#fff5f5; border:2px solid #ffcccc; }
+.danger-zone-title { font-size:.82rem; font-weight:900; color:var(--red); text-transform:uppercase; letter-spacing:1px; margin-bottom:14px; display:flex; align-items:center; gap:6px; }
+.danger-actions { display:flex; gap:10px; flex-wrap:wrap; }
+
+/* Floating save bar */
+.save-bar {
+  display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+  background:var(--eel); color:#fff;
+  padding:14px 28px; border-radius:30px;
+  align-items:center; gap:14px;
+  box-shadow:0 8px 24px rgba(0,0,0,.25); z-index:300;
+  animation:popUp .3s ease-out; font-size:.88rem; font-weight:800;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .pc-stats { display:none; }
+  .profile-card { gap:16px; padding:22px 24px; }
+  .pc-name { font-size:1.3rem; }
+  .content { padding:20px 18px; }
+  .set-section { padding:20px 22px; }
+  .sp-tab { padding:14px 16px; font-size:.82rem; }
+}
+@media (max-width: 768px) {
+  .profile-card { flex-wrap:wrap; padding:18px; gap:12px; }
+  .pc-name { font-size:1.2rem; }
+  .pc-stats { display:none; }
+  .pc-edit-btn { width:100%; text-align:center; justify-content:center; }
+  .sp-tab { padding:12px 14px; font-size:.78rem; }
+  .set-section { padding:18px; }
+  .set-row { flex-wrap:wrap; gap:12px; }
+  .set-input { width:100%; }
+  .xp-goals { flex-wrap:wrap; }
+  .save-bar { width:calc(100% - 32px); bottom:76px; border-radius:16px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <button class="hamburger" id="hamBtn" aria-label="Buka menu">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="logo">
+    <img class="logo-icon" src="image/logo.png" alt="Duolingo Logo">
+    <span>Duolingo</span>
+  </div>
+  <div class="search-wrap">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2.5">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    </svg>
+    <input type="text" placeholder="Cari kursus bahasa...">
+  </div>
+  <div class="hstats">
+    <div class="chip chip-fire">🔥 <span>14</span> <span class="chip-lbl">Hari</span></div>
+    <div class="chip chip-heart">❤️ <span>5</span> <span class="chip-lbl">Nyawa</span></div>
+    <div class="chip chip-gem">💎 <span>320</span> <span class="chip-lbl">Permata</span></div>
+    <div class="flag-btn" title="Bahasa: Inggris">🇬🇧</div>
+  </div>
+</header>
+
+<div class="sidebar-overlay" id="overlay"></div>
+
+<div class="page">
+
+  <nav class="sidenav" id="sidenav">
+    <div class="nav-label">Menu Utama</div>
+    <a href="duolingo-redesign.html" class="nav-item"><span class="nav-ico">🏠</span><span>Beranda</span></a>
+    <a href="#" class="nav-item"><span class="nav-ico">🎯</span><span>Misi</span><span class="nav-badge">2</span></a>
+    <a href="duolingo-leaderboard.html" class="nav-item"><span class="nav-ico">🏆</span><span>Leaderboard</span></a>
+    <a href="#" class="nav-item"><span class="nav-ico">👤</span><span>Profil</span></a>
+    <a href="#" class="nav-item"><span class="nav-ico">🛒</span><span>Toko</span></a>
+    <div class="nav-divider"></div>
+    <div class="nav-label">Lainnya</div>
+    <a href="#" class="nav-item"><span class="nav-ico">❓</span><span>Bantuan</span></a>
+    <a href="#" class="nav-item active"><span class="nav-ico">⚙️</span><span>Pengaturan</span><span class="nav-dot"></span></a>
+    <div class="nav-spacer"></div>
+    <div class="nav-divider"></div>
+    <a href="#" class="nav-item danger"><span class="nav-ico">🚪</span><span>Keluar</span></a>
+  </nav>
+
+  <main class="content">
+
+    <!-- Profile card -->
+    <div class="profile-card">
+      <div class="pc-avatar-wrap">
+        <div class="pc-avatar">KM</div>
+        <div class="pc-avatar-edit" title="Ganti foto">✏️</div>
+      </div>
+      <div class="pc-info">
+        <div class="pc-greeting">⚙️ Pengaturan Akun</div>
+        <div class="pc-name">Kamu</div>
+        <div class="pc-username">@kamu_belajar · Bergabung Maret 2024</div>
+        <div class="pc-badges">
+          <div class="pc-badge">🔥 14 hari streak</div>
+          <div class="pc-badge">⭐ Liga Perunggu</div>
+          <div class="pc-badge">🇬🇧 Belajar Inggris</div>
+        </div>
+      </div>
+      <div class="pc-stats">
+        <div class="pc-stat"><span>⚡</span><div><div class="pc-stat-val">1,240</div><div style="font-size:.68rem;color:rgba(255,255,255,.5);font-weight:700;">Total XP</div></div></div>
+        <div class="pc-stat"><span>🗓️</span><div><div class="pc-stat-val">23</div><div style="font-size:.68rem;color:rgba(255,255,255,.5);font-weight:700;">Sesi Belajar</div></div></div>
+        <div class="pc-stat"><span>🎯</span><div><div class="pc-stat-val">87%</div><div style="font-size:.68rem;color:rgba(255,255,255,.5);font-weight:700;">Akurasi</div></div></div>
+      </div>
+      <button class="pc-edit-btn" onclick="showSave()">✏️ Edit Profil</button>
+    </div>
+
+    <!-- Settings panel -->
+    <div class="settings-panel">
+      <div class="sp-tabs">
+        <div class="sp-tab active" onclick="switchTab(this,'akun')">👤 Akun</div>
+        <div class="sp-tab" onclick="switchTab(this,'belajar')">📚 Pembelajaran</div>
+        <div class="sp-tab" onclick="switchTab(this,'notif')">🔔 Notifikasi</div>
+        <div class="sp-tab" onclick="switchTab(this,'tampilan')">🎨 Tampilan</div>
+        <div class="sp-tab" onclick="switchTab(this,'privasi')">🔒 Privasi</div>
+        <div class="sp-tab" onclick="switchTab(this,'koneksi')">🔗 Koneksi</div>
+      </div>
+
+      <!-- TAB: AKUN -->
+      <div class="sp-pane active" id="pane-akun">
+        <div class="set-section">
+          <div class="set-section-title">Informasi Pribadi</div>
+          <div class="set-row">
+            <div class="set-row-icon green">👤</div>
+            <div class="set-row-info"><div class="set-row-label">Nama Lengkap</div><div class="set-row-desc">Nama yang ditampilkan ke teman</div></div>
+            <div class="set-row-control"><input class="set-input" type="text" value="Kamu Belajar" oninput="showSave()"></div>
+          </div>
+          <div class="set-row">
+            <div class="set-row-icon blue">🏷️</div>
+            <div class="set-row-info"><div class="set-row-label">Username</div><div class="set-row-desc">Unik, digunakan untuk dicari teman</div></div>
+            <div class="set-row-control"><input class="set-input" type="text" value="kamu_belajar" oninput="showSave()"></div>
+          </div>
+          <div class="set-row">
+            <div class="set-row-icon orange">📧</div>
+            <div class="set-row-info"><div class="set-row-label">Email</div><div class="set-row-desc">Untuk login dan notifikasi penting</div></div>
+            <div class="set-row-control"><input class="set-input" type="email" value="kamu@email.com" oninput="showSave()"></div>
+          </div>
+          <div class="set-row">
+            <div class="set-row-icon gray">🌏</div>
+            <div class="set-row-info"><div class="set-row-label">Bahasa Antarmuka</div><div class="set-row-desc">Bahasa untuk tampilan aplikasi</div></div>
+            <div class="set-row-control">
+              <select class="set-select" onchange="showSave()">
+                <option selected>🇮🇩 Bahasa Indonesia</option>
+                <option>🇬🇧 English</option>
+                <option>🇯🇵 日本語</option>
+                <option>🇰🇷 한국어</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="set-section">
+          <div class="set-section-title">Keamanan</div>
+          <div class="set-row">
+            <div class="set-row-icon red">🔑</div>
+            <div class="set-row-info"><div class="set-row-label">Kata Sandi</div><div class="set-row-desc">Terakhir diubah 3 bulan lalu</div></div>
+            <div class="set-row-control"><button class="set-btn secondary" onclick="showSave()">Ubah Kata Sandi</button></div>
+          </div>
+          <div class="set-row">
+            <div class="set-row-icon green">🛡️</div>
+            <div class="set-row-info"><div class="set-row-label">Verifikasi Dua Langkah</div><div class="set-row-desc">Keamanan ekstra untuk akunmu</div></div>
+            <div class="set-row-control"><label class="toggle"><input type="checkbox" onchange="showSave()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+          </div>
+          <div class="set-row">
+            <div class="set-row-icon blue">📱</div>
+            <div class="set-row-info"><div class="set-row-label">Sesi Aktif</div><div class="set-row-desc">Perangkat yang sedang login</div></div>
+            <div class="set-row-control"><button class="set-btn secondary">Lihat Sesi</button></div>
+          </div>
+        </div>
+        <div class="danger-zone">
+          <div class="danger-zone-title">⚠️ Zona Berbahaya</div>
+          <div class="danger-actions">
+            <button class="set-btn danger">🗑️ Hapus Akun</button>
+            <button class="set-btn danger">⛔ Nonaktifkan Akun</button>
+            <button class="set-btn secondary">📥 Unduh Data Saya</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: PEMBELAJARAN -->
+      <div class="sp-pane" id="pane-belajar">
+        <div class="set-section">
+          <div class="set-section-title">Target Harian</div>
+          <div class="set-row">
+            <div class="set-row-icon green">⚡</div>
+            <div class="set-row-info"><div class="set-row-label">Target XP Harian</div><div class="set-row-desc">Pilih seberapa intensif kamu belajar</div></div>
+            <div class="set-row-control">
+              <div class="xp-goals">
+                <div class="xp-goal" onclick="pickGoal(this)"><div class="xp-goal-num">10</div><div class="xp-goal-lbl">Santai</div></div>
+                <div class="xp-goal active" onclick="pickGoal(this)"><div class="xp-goal-num">20</div><div class="xp-goal-lbl">Reguler</div></div>
+                <div class="xp-goal" onclick="pickGoal(this)"><div class="xp-goal-num">30</div><div class="xp-goal-lbl">Serius</div></div>
+                <div class="xp-goal" onclick="pickGoal(this)"><div class="xp-goal-num">50</div><div class="xp-goal-lbl">Intensif</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="set-section">
+          <div class="set-section-title">Bahasa yang Dipelajari</div>
+          <div class="set-row">
+            <div class="set-row-icon blue">🇬🇧</div>
+            <div class="set-row-info"><div class="set-row-label">Bahasa Inggris</div><div class="set-row-desc">Tingkat Menengah · 1,240 XP</div></div>
+            <div class="set-row-control"><button class="set-btn primary" style="font-size:.75rem;padding:6px 14px;">Aktif ✓</button></div>
+          </div>
+          <div class="set-row">
+            <div class="set-row-icon" style="background:#fff8e0">🇯🇵</div>
+            <div class="set-row-info"><div class="set-row-label">Bahasa Jepang</div><div class="set-row-desc">Pemula · 120 XP</div></div>
+            <div class="set-row-control" style="display:flex;gap:6px;">
+              <button class="set-btn secondary" style="font-size:.75rem;padding:6px 14px;">Pindah</button>
+              <button class="set-btn danger" style="font-size:.75rem;padding:6px 12px;">✕</button>
+            </div>
+          </div>
+          <div class="set-row">
+            <div class="set-row-icon gray">➕</div>
+            <div class="set-row-info"><div class="set-row-label">Tambah Bahasa Baru</div><div class="set-row-desc">Jelajahi 40+ bahasa tersedia</div></div>
+            <div class="set-row-control"><button class="set-btn primary">+ Tambah</button></div>
+          </div>
+        </div>
+        <div class="set-section">
+          <div class="set-section-title">Preferensi Latihan</div>
+          <div class="set-row">
+            <div class="set-row-icon purple">🎤</div>
+            <div class="set-row-info"><div class="set-row-label">Latihan Berbicara</div><div class="set-row-desc">Aktifkan latihan ucapan via mikrofon</div></div>
+            <div class="set-row-control"><label class="toggle"><input type="checkbox" checked onchange="showSave()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+          </div>
+          <div class="set-row">
+            <div class="set-row-icon blue">👂</div>
+            <div class="set-row-info"><div class="set-row-label">Latihan Mendengar</div><div class="set-row-desc">Soal berdasarkan audio bahasa target</div></div>
+            <div class="set-row-control"><label class="toggle"><input type="checkbox" checked onchange="showSave()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+          </div>
+          <div class="set-row">
+            <div class="set-row-icon orange">🔀</div>
+            <div class="set-row-info"><div class="set-row-label">Mode Acak Soal</div><div class="set-row-desc">Acak urutan latihan setiap sesi</div></div>
+            <div class="set-row-control"><label class="toggle"><input type="checkbox" onchange="showSave()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+          </div>
+          <div class="set-row">
+            <div class="set-row-icon green">🤖</div>
+            <div class="set-row-info"><div class="set-row-label">Adaptasi AI</div><div class="set-row-desc">Sesuaikan kesulitan otomatis berdasar performa</div></div>
+            <div class="set-row-control"><label class="toggle"><input type="checkbox" checked onchange="showSave()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+          </div>
+          <div class="set-row">
+            <div class="set-row-icon gray">⏱️</div>
+            <div class="set-row-info"><div class="set-row-label">Durasi Sesi Default</div><div class="set-row-desc">Batas waktu per sesi belajar</div></div>
+            <div class="set-row-control">
+              <select class="set-select" onchange="showSave()">
+                <option>5 menit</option><option selected>10 menit</option><option>15 menit</option><option>20 menit</option><option>Tanpa batas</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: NOTIFIKASI -->
+      <div class="sp-pane" id="pane-notif">
+        <div class="set-section">
+          <div class="set-section-title">Jadwal Pengingat</div>
+          <div class="set-row">
+            <div class="set-row-icon orange">⏰</div>
+            <div class="set-row-info"><div class="set-row-label">Pengingat Belajar Harian</div><div class="set-row-desc">Notifikasi push di waktu yang kamu pilih</div></div>
+            <div class="set-row-control" style="display:flex;align-items:center;gap:10px;">
+              <input type="time" value="19:00" class="set-input" style="width:auto" onchange="showSave()">
+              <label class="toggle"><input type="checkbox" checked onchange="showSave()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+            </div>
+          </div>
+        </div>
+        <div class="set-section">
+          <div class="set-section-title">Kategori Notifikasi</div>
+          <div class="notif-category">
+            <div class="notif-cat-hd"><span class="notif-cat-title">📚 Pembelajaran</span><label class="toggle"><input type="checkbox" checked onchange="showSave()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+            <div class="notif-cat-rows">
+              <div class="notif-row"><span>Pengingat streak harian</span><label class="toggle"><input type="checkbox" checked onchange="showSave()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+              <div class="notif-row"><span>Misi baru tersedia</span><label class="toggle"><input type="checkbox" checked onchange="showSave()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+              <div class="notif-row"><span>Unit baru terbuka</span><label class="toggle"><input type="checkbox" onchange="showSave()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+            </div>
+          </div>
+          <div class="notif-category">
+            <div class="notif-cat-hd"><span class="notif-cat-title">🏆 Kompetisi</span><label class="toggle"><input type="checkbox" checked onchange="showSave()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+            <div class="notif-cat-rows">
+              <div class="notif-row"><span>Teman mengalahkan XP-mu</span><label class="toggle"><input type="checkbox" checked onchange="showSave()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+              <div class="notif-row"><span>Akhir musim liga mendekat</span><label class="toggle"><input type="checkbox" checked onchange="showSave()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+              <div class="notif-row"><span>Hasil promosi/degradasi liga</span><label class="toggle"><input type="checkbox" checked onchange="showSave()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+            </div>
+          </div>
+          <div class="notif-category">
+            <div class="notif-cat-hd"><span class="notif-cat-title">📣 Update & Promo</span><label class="toggle"><input type="checkbox" onchange="showSave()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+            <div class="notif-cat-rows">
+              <div class="notif-row"><span>Fitur baru Duolingo</span><label class="toggle"><input type="checkbox" onchange="showSave()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+              <div class="notif-row"><span>Promo & diskon Toko</span><label class="toggle"><input type="checkbox" onchange="showSave()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+            </div>
+          </div>
+        </div>
+        <div class="set-section">
+          <div class="set-section-title">Saluran Notifikasi</div>
+          <div class="set-row">
+            <div class="set-row-icon blue">📱</div>
+            <div class="set-row-info"><div class="set-row-label">Push Notification</div><div class="set-row-desc">Notifikasi langsung di perangkat</div></div>
+            <div class="set-row-control"><label class="toggle"><input type="checkbox" checked onchange="showSave()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+          </div>
+          <div class="set-row">
+            <div class="set-row-icon orange">📧</div>
+            <div class="set-row-info"><div class="set-row-label">Email Mingguan</div><div class="set-row-desc">Ringkasan progres setiap minggu</div></div>
+            <div class="set-row-control"><label class="toggle"><input type="checkbox" checked onchange="showSave()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: TAMPILAN -->
+      <div class="sp-pane" id="pane-tampilan">
+        <div class="set-section">
+          <div class="set-section-title">Tema</div>
+          <div class="set-row">
+            <div class="set-row-icon gray">🌗</div>
+            <div class="set-row-info"><div class="set-row-label">Mode Tampilan</div><div class="set-row-desc">Terang, gelap, atau ikuti sistem</div></div>
+            <div class="set-row-control">
+              <div class="radio-group" id="themeGroup">
+                <label class="radio-opt checked" onclick="pickRadio('themeGroup',this)"><input type="radio" name="theme"> ☀️ Terang</label>
+                <label class="radio-opt" onclick="pickRadio('themeGroup',this)"><input type="radio" name="theme"> 🌙 Gelap</label>
+                <label class="radio-opt" onclick="pickRadio('themeGroup',this)"><input type="radio" name="theme"> 🔄 Otomatis</label>
+              </div>
+            </div>
+          </div>
+          <div class="set-row">
+            <div class="set-row-icon green">🎨</div>
+            <div class="set-row-info"><div class="set-row-label">Warna Aksen</div><div class="set-row-desc">Warna utama antarmuka</div></div>
+            <div class="set-row-control">
+              <div style="display:flex;gap:8px;">
+                <div onclick="pickColor(this)" style="width:28px;height:28px;border-radius:50%;background:#58cc02;border:3px solid #45a800;cursor:pointer;"></div>
+                <div onclick="pickColor(this)" style="width:28px;height:28px;border-radius:50%;background:#1CB0F6;border:3px solid transparent;cursor:pointer;"></div>
+                <div onclick="pickColor(this)" style="width:28px;height:28px;border-radius:50%;background:#CE82FF;border:3px solid transparent;cursor:pointer;"></div>
+                <div onclick="pickColor(this)" style="width:28px;height:28px;border-radius:50%;background:#FF9600;border:3px solid transparent;cursor:pointer;"></div>
+                <div onclick="pickColor(this)" style="width:28px;height:28px;border-radius:50%;background:#FF4B4B;border:3px solid transparent;cursor:pointer;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="set-section">
+          <div class="set-section-title">Ukuran & Animasi</div>
+          <div class="set-row">
+            <div class="set-row-icon blue">🔠</div>
+            <div class="set-row-info"><div class="set-row-label">Ukuran Teks</div><div class="set-row-desc">Sesuaikan keterbacaan</div></div>
+            <div class="set-row-control"><select class="set-select" onchange="showSave()"><option>Kecil</option><option selected>Normal</option><option>Besar</option><option>Sangat Besar</option></select></div>
+          </div>
+          <div class="set-row">
+            <div class="set-row-icon purple">✨</div>
+            <div class="set-row-info"><div class="set-row-label">Animasi & Efek</div><div class="set-row-desc">Nonaktifkan untuk hemat baterai</div></div>
+            <div class="set-row-control"><label class="toggle"><input type="checkbox" checked onchange="showSave()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+          </div>
+          <div class="set-row">
+            <div class="set-row-icon orange">🔊</div>
+            <div class="set-row-info"><div class="set-row-label">Efek Suara</div><div class="set-row-desc">Suara saat menjawab benar/salah</div></div>
+            <div class="set-row-control"><label class="toggle"><input type="checkbox" checked onchange="showSave()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+          </div>
+          <div class="set-row">
+            <div class="set-row-icon gray">📳</div>
+            <div class="set-row-info"><div class="set-row-label">Getaran (Haptic)</div><div class="set-row-desc">Umpan balik getar di perangkat mobile</div></div>
+            <div class="set-row-control"><label class="toggle"><input type="checkbox" checked onchange="showSave()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: PRIVASI -->
+      <div class="sp-pane" id="pane-privasi">
+        <div class="set-section">
+          <div class="set-section-title">Visibilitas Profil</div>
+          <div class="set-row">
+            <div class="set-row-icon green">👁️</div>
+            <div class="set-row-info"><div class="set-row-label">Profil Publik</div><div class="set-row-desc">Izinkan siapa pun melihat profilmu</div></div>
+            <div class="set-row-control"><label class="toggle"><input type="checkbox" checked onchange="showSave()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+          </div>
+          <div class="set-row">
+            <div class="set-row-icon blue">🏆</div>
+            <div class="set-row-info"><div class="set-row-label">Tampil di Leaderboard</div><div class="set-row-desc">Muncul di papan peringkat publik</div></div>
+            <div class="set-row-control"><label class="toggle"><input type="checkbox" checked onchange="showSave()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+          </div>
+          <div class="set-row">
+            <div class="set-row-icon purple">📊</div>
+            <div class="set-row-info"><div class="set-row-label">Bagikan Statistik</div><div class="set-row-desc">Teman dapat melihat XP dan streak-mu</div></div>
+            <div class="set-row-control"><label class="toggle"><input type="checkbox" onchange="showSave()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+          </div>
+          <div class="set-row">
+            <div class="set-row-icon orange">👥</div>
+            <div class="set-row-info"><div class="set-row-label">Siapa yang Bisa Mengikuti</div><div class="set-row-desc">Kontrol permintaan pertemanan</div></div>
+            <div class="set-row-control">
+              <select class="set-select" onchange="showSave()">
+                <option>Semua orang</option><option selected>Hanya teman teman</option><option>Tidak ada</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="set-section">
+          <div class="set-section-title">Data & Analitik</div>
+          <div class="set-row">
+            <div class="set-row-icon gray">📈</div>
+            <div class="set-row-info"><div class="set-row-label">Analitik Penggunaan</div><div class="set-row-desc">Bantu kami meningkatkan kualitas app</div></div>
+            <div class="set-row-control"><label class="toggle"><input type="checkbox" checked onchange="showSave()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+          </div>
+          <div class="set-row">
+            <div class="set-row-icon red">🍪</div>
+            <div class="set-row-info"><div class="set-row-label">Cookie Analitik</div><div class="set-row-desc">Data anonim untuk peningkatan layanan</div></div>
+            <div class="set-row-control"><label class="toggle"><input type="checkbox" onchange="showSave()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: KONEKSI -->
+      <div class="sp-pane" id="pane-koneksi">
+        <div class="set-section">
+          <div class="set-section-title">Akun Terhubung</div>
+          <div class="connected-row">
+            <div class="conn-logo">🔵</div>
+            <div class="conn-info"><div class="conn-name">Facebook</div><div class="conn-status ok">✓ Terhubung sebagai Kamu Belajar</div></div>
+            <button class="set-btn secondary">Putuskan</button>
+          </div>
+          <div class="connected-row">
+            <div class="conn-logo">🔴</div>
+            <div class="conn-info"><div class="conn-name">Google</div><div class="conn-status ok">✓ kamu@gmail.com</div></div>
+            <button class="set-btn secondary">Putuskan</button>
+          </div>
+          <div class="connected-row">
+            <div class="conn-logo">⬛</div>
+            <div class="conn-info"><div class="conn-name">Apple ID</div><div class="conn-status">Belum terhubung</div></div>
+            <button class="set-btn primary">Hubungkan</button>
+          </div>
+          <div class="connected-row">
+            <div class="conn-logo">🐦</div>
+            <div class="conn-info"><div class="conn-name">Twitter / X</div><div class="conn-status">Belum terhubung</div></div>
+            <button class="set-btn primary">Hubungkan</button>
+          </div>
+        </div>
+        <div class="set-section">
+          <div class="set-section-title">Langganan</div>
+          <div class="set-row">
+            <div class="set-row-icon" style="background:linear-gradient(135deg,#fff4e0,#fff0d0)">👑</div>
+            <div class="set-row-info"><div class="set-row-label">Duolingo Super</div><div class="set-row-desc">Belajar tanpa iklan, nyawa tak terbatas & lebih banyak</div></div>
+            <div class="set-row-control">
+              <button class="set-btn primary" style="background:linear-gradient(135deg,var(--bee),var(--fox));box-shadow:0 3px 0 #cc7000;color:#fff;border:none;">✨ Upgrade</button>
+            </div>
+          </div>
+          <div class="set-row">
+            <div class="set-row-icon green">🎁</div>
+            <div class="set-row-info"><div class="set-row-label">Kode Hadiah / Promo</div><div class="set-row-desc">Masukkan kode untuk bonus</div></div>
+            <div class="set-row-control" style="display:flex;gap:8px;">
+              <input class="set-input" type="text" placeholder="Masukkan kode..." style="width:160px;">
+              <button class="set-btn primary">Klaim</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /settings-panel -->
+  </main>
+
+  <footer>
+    <div class="ft-logo">🦉 duolingo</div>
+    <div class="ft-links">
+      <span class="ft-link">📧 e-Complaint</span>
+      <span class="ft-link">ℹ️ Tentang Kami</span>
+      <span class="ft-link">📄 Syarat & Ketentuan</span>
+      <span class="ft-link">🔒 Privasi</span>
+    </div>
+    <div class="ft-socials">
+      <div class="ft-soc">🐦</div><div class="ft-soc">📘</div><div class="ft-soc">📸</div><div class="ft-soc">▶️</div>
+    </div>
+    <div class="ft-copy">© 2026 Duolingo Redesign Concept · Dibuat dengan ❤️ untuk pembelajaran bahasa</div>
+  </footer>
+
+</div>
+
+<nav class="mobile-nav">
+  <div class="mobile-nav-item"><span class="mn-icon">🏠</span><span>Beranda</span></div>
+  <div class="mobile-nav-item"><span class="mn-icon">🎯</span><span>Misi</span></div>
+  <div class="mobile-nav-item"><span class="mn-icon">🏆</span><span>Liga</span></div>
+  <div class="mobile-nav-item"><span class="mn-icon">👤</span><span>Profil</span></div>
+  <div class="mobile-nav-item active"><span class="mn-icon">⚙️</span><span>Setelan</span></div>
+</nav>
+
+<!-- Floating save bar -->
+<div class="save-bar" id="saveBar">
+  <span>Ada perubahan yang belum disimpan</span>
+  <button class="set-btn primary" onclick="saveChanges()">💾 Simpan</button>
+  <button class="set-btn secondary" style="background:transparent;border-color:rgba(255,255,255,.3);color:#fff;" onclick="hideSave()">Batal</button>
+</div>
+
+<script src="script.js"></script>
+<script>
+  function switchTab(el, paneId) {
+    document.querySelectorAll('.sp-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.sp-pane').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('pane-' + paneId).classList.add('active');
+  }
+
+  function pickGoal(el) {
+    document.querySelectorAll('.xp-goal').forEach(g => g.classList.remove('active'));
+    el.classList.add('active');
+    showSave();
+  }
+
+  function pickRadio(groupId, el) {
+    document.querySelectorAll('#' + groupId + ' .radio-opt').forEach(o => o.classList.remove('checked'));
+    el.classList.add('checked');
+    showSave();
+  }
+
+  function pickColor(el) {
+    document.querySelectorAll('.set-row [onclick="pickColor(this)"]').forEach(c => c.style.border = '3px solid transparent');
+    el.style.border = '3px solid ' + el.style.background;
+    showSave();
+  }
+
+  function showSave() {
+    const bar = document.getElementById('saveBar');
+    bar.style.display = 'flex';
+  }
+  function hideSave() {
+    document.getElementById('saveBar').style.display = 'none';
+  }
+  function saveChanges() {
+    const bar = document.getElementById('saveBar');
+    const orig = bar.innerHTML;
+    bar.innerHTML = '<span>✅ Perubahan berhasil disimpan!</span>';
+    bar.style.background = 'var(--green-dk)';
+    setTimeout(() => {
+      bar.style.display = 'none';
+      bar.style.background = 'var(--eel)';
+      bar.innerHTML = orig;
+    }, 2200);
+  }
+
+  document.getElementById('saveBar').style.display = 'none';
+</script>
+</body>
+</html>

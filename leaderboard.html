@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Duolingo — Leaderboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+/* ===== LEADERBOARD-SPECIFIC ===== */
+
+/* Sidebar mini league card */
+.side-league { border-radius:var(--rs); overflow:hidden; border:2px solid var(--border); margin-top:4px; }
+.side-league-hd {
+  background:linear-gradient(90deg,var(--blue),var(--navy));
+  color:white; font-size:.72rem; font-weight:900;
+  text-transform:uppercase; letter-spacing:.8px;
+  padding:7px 12px; display:flex; align-items:center; gap:6px;
+}
+.side-league-body { padding:10px 12px; background:#f5f9ff; display:flex; flex-direction:column; gap:6px; }
+.side-league-row { display:flex; align-items:center; gap:8px; font-size:.8rem; font-weight:700; }
+.side-league-row.me { color:var(--green); }
+.side-rank { width:16px; text-align:center; font-size:.75rem; color:var(--muted); }
+.side-av {
+  width:22px; height:22px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:.65rem; font-weight:900; color:white; flex-shrink:0;
+}
+.side-xp { margin-left:auto; font-size:.72rem; color:var(--muted); }
+
+/* Hero banner */
+.lb-hero {
+  background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);
+  border-radius:var(--r); padding:28px 32px;
+  display:flex; align-items:center; justify-content:space-between; gap:20px;
+  position:relative; overflow:hidden;
+  box-shadow:0 6px 24px rgba(0,0,0,.18);
+  animation:fadeSlide .5s ease-out;
+}
+.lb-hero::before {
+  content:''; position:absolute; inset:0;
+  background:radial-gradient(circle at 80% 50%,rgba(88,204,2,.15) 0%,transparent 70%);
+  pointer-events:none;
+}
+.lb-hero-stars { position:absolute; inset:0; overflow:hidden; pointer-events:none; }
+.star {
+  position:absolute; width:3px; height:3px;
+  background:rgba(255,255,255,.6); border-radius:50%;
+  animation:twinkle 3s ease-in-out infinite;
+}
+.lb-hero-tag { font-size:.68rem; font-weight:900; letter-spacing:2px; text-transform:uppercase; color:var(--green); margin-bottom:6px; }
+.lb-hero-title { font-size:2rem; font-weight:900; color:#fff; line-height:1.1; margin-bottom:8px; }
+.lb-hero-sub { font-size:.9rem; color:rgba(255,255,255,.65); font-weight:600; }
+.lb-hero-trophies { display:flex; gap:16px; z-index:1; }
+.trophy-col { display:flex; flex-direction:column; align-items:center; gap:4px; }
+.trophy-icon { font-size:2.8rem; filter:drop-shadow(0 4px 8px rgba(0,0,0,.3)); }
+.trophy-label { font-size:.7rem; font-weight:800; color:rgba(255,255,255,.6); }
+.hero-tabs { display:flex; gap:8px; z-index:1; flex-shrink:0; }
+.hero-tab {
+  padding:8px 18px; border-radius:24px;
+  font-weight:800; font-size:.82rem; cursor:pointer;
+  border:2px solid rgba(255,255,255,.2); color:rgba(255,255,255,.6);
+  background:rgba(255,255,255,.06); transition:all .2s;
+}
+.hero-tab.active, .hero-tab:hover {
+  background:var(--green); border-color:var(--green);
+  color:#fff; box-shadow:0 4px 12px rgba(88,204,2,.35);
+}
+.lb-hero-left { z-index:1; }
+
+/* Season bar */
+.season-bar {
+  background:var(--card); border:2px solid var(--border); border-radius:var(--rs);
+  padding:14px 18px; display:flex; align-items:center; gap:14px;
+  grid-column:1/-1;
+}
+.season-icon { font-size:1.6rem; }
+.season-info { flex:1; }
+.season-label { font-size:.7rem; font-weight:900; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:4px; }
+.season-title { font-size:.92rem; font-weight:800; margin-bottom:6px; }
+.season-track { height:8px; background:#eee; border-radius:4px; overflow:hidden; }
+.season-fill { height:100%; border-radius:4px; background:linear-gradient(90deg,var(--green),var(--green-lt)); width:68%; animation:growBar 1.2s ease-out .4s both; }
+.season-timer { text-align:right; flex-shrink:0; }
+.season-time-big { font-size:1.2rem; font-weight:900; color:var(--red); }
+.season-time-lbl { font-size:.65rem; color:var(--muted); font-weight:700; }
+
+/* 2-col leaderboard grid */
+.lb-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+
+/* Section headers */
+.lb-section-hd {
+  border-radius:var(--r); padding:20px 24px;
+  display:flex; align-items:center; gap:16px; position:relative; overflow:hidden;
+}
+.lb-section-hd.friends { background:linear-gradient(135deg,#0f3460,#1a4d8a); box-shadow:0 4px 20px rgba(28,176,246,.2); }
+.lb-section-hd.world   { background:linear-gradient(135deg,#3d0066,#6a0dad); box-shadow:0 4px 20px rgba(206,130,255,.2); }
+.lb-section-hd::after { content:''; position:absolute; right:-20px; top:-20px; width:100px; height:100px; background:rgba(255,255,255,.06); border-radius:50%; }
+.lb-sec-icon { font-size:2.4rem; z-index:1; }
+.lb-sec-text { z-index:1; }
+.lb-sec-label { font-size:.68rem; font-weight:900; letter-spacing:1.5px; text-transform:uppercase; color:rgba(255,255,255,.6); margin-bottom:3px; }
+.lb-sec-title { font-size:1.15rem; font-weight:900; color:#fff; margin-bottom:2px; }
+.lb-sec-sub { font-size:.78rem; color:rgba(255,255,255,.65); font-weight:600; }
+.lb-sec-count { margin-left:auto; z-index:1; font-size:1.6rem; font-weight:900; color:rgba(255,255,255,.25); line-height:1; }
+.lb-sec-count span { display:block; font-size:.65rem; color:rgba(255,255,255,.4); font-weight:700; }
+
+/* Leaderboard table */
+.lb-table-wrap {
+  background:var(--card); border:2px solid var(--border); border-radius:var(--r);
+  overflow:hidden; display:flex; flex-direction:column;
+}
+.lb-table-top {
+  display:grid; grid-template-columns:1fr 1fr 1fr;
+  padding:20px 16px 0; align-items:flex-end; min-height:120px; position:relative;
+}
+
+/* Podium */
+.podium-item { display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; }
+.podium-item:hover .podium-av { transform:scale(1.08); }
+.podium-item.p1 { order:2; } .podium-item.p2 { order:1; } .podium-item.p3 { order:3; }
+.podium-av-wrap { position:relative; }
+.podium-av {
+  width:52px; height:52px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.15rem; font-weight:900; color:#fff; border:3px solid transparent;
+  transition:transform .2s; box-shadow:0 4px 12px rgba(0,0,0,.12);
+}
+.podium-item.p1 .podium-av { width:62px; height:62px; font-size:1.35rem; }
+.podium-crown { position:absolute; top:-14px; left:50%; transform:translateX(-50%); font-size:1rem; filter:drop-shadow(0 2px 4px rgba(0,0,0,.2)); }
+.podium-name { font-size:.75rem; font-weight:800; text-align:center; max-width:70px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.podium-xp { font-size:.68rem; color:var(--muted); font-weight:700; }
+.podium-block { width:100%; border-radius:6px 6px 0 0; display:flex; align-items:center; justify-content:center; font-size:.78rem; font-weight:900; color:rgba(255,255,255,.8); margin-top:6px; }
+.podium-item.p1 .podium-block { height:44px; background:linear-gradient(180deg,var(--bee),#e6b400); }
+.podium-item.p2 .podium-block { height:32px; background:linear-gradient(180deg,#b0b8c8,#8e9aab); }
+.podium-item.p3 .podium-block { height:24px; background:linear-gradient(180deg,var(--fox),#d47a00); }
+
+.lb-list { display:flex; flex-direction:column; overflow-y:auto; max-height:340px; padding:8px 0; }
+.lb-list::-webkit-scrollbar { width:4px; }
+.lb-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+.lb-flag { font-size:.9rem; }
+
+.lb-table-footer {
+  padding:10px 16px; border-top:2px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between; font-size:.78rem; font-weight:700;
+}
+.lb-tf-info { color:var(--muted); }
+.lb-tf-btn {
+  padding:5px 14px; border-radius:16px;
+  background:var(--green); color:#fff; font-size:.75rem; font-weight:800;
+  cursor:pointer; border:none; font-family:'Nunito',sans-serif;
+  transition:transform .15s, box-shadow .15s;
+  box-shadow:0 3px 0 var(--green-dk);
+}
+.lb-tf-btn:hover { transform:translateY(-1px); box-shadow:0 5px 0 var(--green-dk); }
+
+/* Achievement strip */
+.achieve-strip {
+  grid-column:1/-1; background:var(--card); border:2px solid var(--border);
+  border-radius:var(--rs); padding:14px 18px;
+}
+.achieve-title { font-size:.72rem; font-weight:900; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:10px; }
+.achieve-row { display:flex; gap:10px; flex-wrap:wrap; }
+.achieve-badge { display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; }
+.achieve-ico {
+  width:44px; height:44px; border-radius:var(--rs);
+  display:flex; align-items:center; justify-content:center; font-size:1.4rem;
+  border:2px solid transparent; transition:transform .15s, box-shadow .15s;
+}
+.achieve-badge:hover .achieve-ico { transform:scale(1.1); box-shadow:0 4px 12px rgba(0,0,0,.1); }
+.achieve-ico.earned { background:linear-gradient(135deg,#f0fde0,#d9f7b0); border-color:var(--green); }
+.achieve-ico.locked { background:#f5f5f5; border-color:#ddd; filter:grayscale(1) opacity(.5); }
+.achieve-lbl { font-size:.62rem; font-weight:700; color:var(--muted); }
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .lb-hero-trophies { display:none; }
+  .lb-hero { padding:20px 24px; }
+  .lb-hero-title { font-size:1.5rem; }
+  .hero-tabs { flex-direction:column; gap:6px; }
+  .side-league { display:none; }
+}
+@media (max-width: 768px) {
+  .lb-hero { padding:18px; flex-wrap:wrap; gap:12px; }
+  .lb-hero-title { font-size:1.3rem; }
+  .hero-tabs { flex-direction:row; flex-wrap:wrap; gap:6px; }
+  .hero-tab { padding:6px 14px; font-size:.78rem; }
+  .lb-grid { grid-template-columns:1fr; }
+  .lb-section-hd.world, .lb-table-wrap:last-of-type { display:none; }
+  .season-bar { flex-wrap:wrap; }
+  .achieve-row { gap:8px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <button class="hamburger" id="hamBtn" aria-label="Buka menu">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="logo">
+    <img class="logo-icon" src="image/logo.png" alt="Duolingo Logo">
+    <span>Duolingo</span>
+  </div>
+  <div class="search-wrap">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2.5">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    </svg>
+    <input type="text" placeholder="Cari kursus bahasa...">
+  </div>
+  <div class="hstats">
+    <div class="chip chip-fire">🔥 <span>14</span> <span class="chip-lbl">Hari</span></div>
+    <div class="chip chip-heart">❤️ <span>5</span> <span class="chip-lbl">Nyawa</span></div>
+    <div class="chip chip-gem">💎 <span>320</span> <span class="chip-lbl">Permata</span></div>
+    <div class="flag-btn" title="Bahasa: Inggris">🇬🇧</div>
+  </div>
+</header>
+
+<div class="sidebar-overlay" id="overlay"></div>
+
+<div class="page">
+
+  <nav class="sidenav" id="sidenav">
+    <div class="nav-label">Menu Utama</div>
+    <a href="dashboard.html" class="nav-item"><span class="nav-ico">🏠</span><span>Beranda</span></a>
+    <a href="#" class="nav-item"><span class="nav-ico">🎯</span><span>Misi</span><span class="nav-badge">2</span></a>
+    <a href="#" class="nav-item active"><span class="nav-ico">🏆</span><span>Leaderboard</span><span class="nav-dot"></span></a>
+    <a href="#" class="nav-item"><span class="nav-ico">👤</span><span>Profil</span></a>
+    <a href="#" class="nav-item"><span class="nav-ico">🛒</span><span>Toko</span></a>
+    <div class="nav-divider"></div>
+    <div class="nav-label">Lainnya</div>
+    <a href="#" class="nav-item"><span class="nav-ico">❓</span><span>Bantuan</span></a>
+    <a href="#" class="nav-item"><span class="nav-ico">⚙️</span><span>Pengaturan</span></a>
+    <div class="nav-spacer"></div>
+
+    <!-- Mini league widget -->
+    <div class="side-league">
+      <div class="side-league-hd">🏆 Liga Perunggu</div>
+      <div class="side-league-body">
+        <div class="side-league-row"><span class="side-rank">1</span><div class="side-av" style="background:#FFC800">A</div><span>Andi_R</span><span class="side-xp">580</span></div>
+        <div class="side-league-row"><span class="side-rank">2</span><div class="side-av" style="background:#FF4B4B">S</div><span>Siti_L</span><span class="side-xp">470</span></div>
+        <div class="side-league-row"><span class="side-rank">3</span><div class="side-av" style="background:#CE82FF">B</div><span>Budi_W</span><span class="side-xp">390</span></div>
+        <div class="side-league-row me"><span class="side-rank">4</span><div class="side-av" style="background:#58cc02">K</div><span>Kamu ⬅</span><span class="side-xp">320</span></div>
+        <div class="side-league-row"><span class="side-rank">5</span><div class="side-av" style="background:#1CB0F6">D</div><span>Dani_P</span><span class="side-xp">290</span></div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+
+    <!-- Hero -->
+    <div class="lb-hero">
+      <div class="lb-hero-stars" id="stars"></div>
+      <div class="lb-hero-left">
+        <div class="lb-hero-tag">⚡ Musim 12 · Minggu ke-3</div>
+        <div class="lb-hero-title">Papan Peringkat</div>
+        <div class="lb-hero-sub">Bersaing dengan teman & seluruh dunia. Raih XP sebanyak-banyaknya!</div>
+      </div>
+      <div class="lb-hero-trophies">
+        <div class="trophy-col"><div class="trophy-icon">🥇</div><div class="trophy-label">Emas</div></div>
+        <div class="trophy-col"><div class="trophy-icon">🥈</div><div class="trophy-label">Perak</div></div>
+        <div class="trophy-col"><div class="trophy-icon">🥉</div><div class="trophy-label">Perunggu</div></div>
+      </div>
+      <div class="hero-tabs">
+        <div class="hero-tab active" onclick="switchTab(this,'friends')">👥 Teman</div>
+        <div class="hero-tab" onclick="switchTab(this,'world')">🌍 Dunia</div>
+      </div>
+    </div>
+
+    <!-- Season countdown -->
+    <div class="season-bar">
+      <div class="season-icon">🗓️</div>
+      <div class="season-info">
+        <div class="season-label">Musim Berlangsung</div>
+        <div class="season-title">Musim Semi 2026 — Kumpulkan XP sebelum waktu habis!</div>
+        <div class="season-track"><div class="season-fill"></div></div>
+      </div>
+      <div class="season-timer">
+        <div class="season-time-big">4 Hari</div>
+        <div class="season-time-lbl">Sisa waktu</div>
+      </div>
+    </div>
+
+    <div class="lb-grid">
+
+      <!-- Friends header -->
+      <div class="lb-section-hd friends">
+        <div class="lb-sec-icon">👥</div>
+        <div class="lb-sec-text">
+          <div class="lb-sec-label">Leaderboard</div>
+          <div class="lb-sec-title">Teman Kamu</div>
+          <div class="lb-sec-sub">12 teman · Kamu peringkat #4</div>
+        </div>
+        <div class="lb-sec-count">12<span>Teman</span></div>
+      </div>
+
+      <!-- World header -->
+      <div class="lb-section-hd world">
+        <div class="lb-sec-icon">🌍</div>
+        <div class="lb-sec-text">
+          <div class="lb-sec-label">Leaderboard</div>
+          <div class="lb-sec-title">Seluruh Dunia</div>
+          <div class="lb-sec-sub">Liga Perunggu · 30 pemain</div>
+        </div>
+        <div class="lb-sec-count">30<span>Pemain</span></div>
+      </div>
+
+      <!-- Friends table -->
+      <div class="lb-table-wrap">
+        <div class="lb-table-top">
+          <div class="podium-item p1">
+            <div class="podium-av-wrap"><div class="podium-crown">👑</div><div class="podium-av" style="background:linear-gradient(135deg,#FFC800,#e6b400);border-color:#FFC800">RW</div></div>
+            <div class="podium-name">Rani_W</div><div class="podium-xp">620 XP</div><div class="podium-block">🥇</div>
+          </div>
+          <div class="podium-item p2">
+            <div class="podium-av-wrap"><div class="podium-av" style="background:linear-gradient(135deg,#8e9aab,#6b7789);border-color:#8e9aab">AR</div></div>
+            <div class="podium-name">Andi_R</div><div class="podium-xp">580 XP</div><div class="podium-block">🥈</div>
+          </div>
+          <div class="podium-item p3">
+            <div class="podium-av-wrap"><div class="podium-av" style="background:linear-gradient(135deg,var(--fox),#c47000);border-color:var(--fox)">SL</div></div>
+            <div class="podium-name">Siti_L</div><div class="podium-xp">470 XP</div><div class="podium-block">🥉</div>
+          </div>
+        </div>
+        <div class="lb-list">
+          <div class="lb-row"><span class="lb-rank r1">1</span><div class="lb-av" style="background:linear-gradient(135deg,#FFC800,#e6b400)">RW<div class="online-dot"></div></div><span class="lb-name">Rani_W</span><span class="lb-flag">🇮🇩</span><div class="lb-xp-wrap"><span class="lb-xp">620 XP</span><span class="lb-streak">🔥 21</span></div></div>
+          <div class="lb-row"><span class="lb-rank r2">2</span><div class="lb-av" style="background:linear-gradient(135deg,#8e9aab,#6b7789)">AR</div><span class="lb-name">Andi_R</span><span class="lb-flag">🇮🇩</span><div class="lb-xp-wrap"><span class="lb-xp">580 XP</span><span class="lb-streak">🔥 14</span></div></div>
+          <div class="lb-row"><span class="lb-rank r3">3</span><div class="lb-av" style="background:linear-gradient(135deg,var(--fox),#c47000)">SL</div><span class="lb-name">Siti_L</span><span class="lb-flag">🇮🇩</span><div class="lb-xp-wrap"><span class="lb-xp">470 XP</span><span class="lb-streak">🔥 9</span></div></div>
+          <div class="lb-row me"><span class="lb-rank">4</span><div class="lb-av" style="background:linear-gradient(135deg,var(--green),var(--green-lt))">KM<div class="online-dot"></div></div><span class="lb-name">Kamu ⬅</span><span class="lb-flag">🇮🇩</span><div class="lb-xp-wrap"><span class="lb-xp">320 XP</span><span class="lb-streak">🔥 14</span></div></div>
+          <div class="lb-row"><span class="lb-rank">5</span><div class="lb-av" style="background:linear-gradient(135deg,var(--blue),var(--blue-dk))">DP</div><span class="lb-name">Dani_P</span><span class="lb-flag">🇮🇩</span><div class="lb-xp-wrap"><span class="lb-xp">290 XP</span><span class="lb-streak">🔥 7</span></div></div>
+          <div class="lb-row"><span class="lb-rank">6</span><div class="lb-av" style="background:linear-gradient(135deg,var(--beetle),#a855cc)">BW</div><span class="lb-name">Budi_W</span><span class="lb-flag">🇮🇩</span><div class="lb-xp-wrap"><span class="lb-xp">260 XP</span><span class="lb-streak">🔥 5</span></div></div>
+          <div class="lb-row"><span class="lb-rank">7</span><div class="lb-av" style="background:linear-gradient(135deg,var(--red),#cc2a2a)">FN</div><span class="lb-name">Fitri_N</span><span class="lb-flag">🇲🇾</span><div class="lb-xp-wrap"><span class="lb-xp">210 XP</span><span class="lb-streak">🔥 3</span></div></div>
+          <div class="lb-row"><span class="lb-rank">8</span><div class="lb-av" style="background:linear-gradient(135deg,#2B70C9,#1a4d8a)">HS</div><span class="lb-name">Hendra_S</span><span class="lb-flag">🇮🇩</span><div class="lb-xp-wrap"><span class="lb-xp">180 XP</span><span class="lb-streak">🔥 2</span></div></div>
+        </div>
+        <div class="lb-table-footer">
+          <span class="lb-tf-info">12 teman total</span>
+          <button class="lb-tf-btn">+ Undang Teman</button>
+        </div>
+      </div>
+
+      <!-- World table -->
+      <div class="lb-table-wrap">
+        <div class="lb-table-top">
+          <div class="podium-item p1">
+            <div class="podium-av-wrap"><div class="podium-crown">👑</div><div class="podium-av" style="background:linear-gradient(135deg,#CE82FF,#a855cc);border-color:#CE82FF">YK</div></div>
+            <div class="podium-name">Yuki_K</div><div class="podium-xp">1,420 XP</div><div class="podium-block">🥇</div>
+          </div>
+          <div class="podium-item p2">
+            <div class="podium-av-wrap"><div class="podium-av" style="background:linear-gradient(135deg,#8e9aab,#6b7789);border-color:#8e9aab">MC</div></div>
+            <div class="podium-name">MariaCosta</div><div class="podium-xp">1,180 XP</div><div class="podium-block">🥈</div>
+          </div>
+          <div class="podium-item p3">
+            <div class="podium-av-wrap"><div class="podium-av" style="background:linear-gradient(135deg,var(--fox),#c47000);border-color:var(--fox)">JL</div></div>
+            <div class="podium-name">Jin_Lee</div><div class="podium-xp">980 XP</div><div class="podium-block">🥉</div>
+          </div>
+        </div>
+        <div class="lb-list">
+          <div class="lb-row"><span class="lb-rank r1">1</span><div class="lb-av" style="background:linear-gradient(135deg,#CE82FF,#a855cc)">YK<div class="online-dot"></div></div><span class="lb-name">Yuki_K</span><span class="lb-flag">🇯🇵</span><div class="lb-xp-wrap"><span class="lb-xp">1,420 XP</span><span class="lb-streak">🔥 45</span></div></div>
+          <div class="lb-row"><span class="lb-rank r2">2</span><div class="lb-av" style="background:linear-gradient(135deg,#8e9aab,#6b7789)">MC</div><span class="lb-name">MariaCosta</span><span class="lb-flag">🇧🇷</span><div class="lb-xp-wrap"><span class="lb-xp">1,180 XP</span><span class="lb-streak">🔥 32</span></div></div>
+          <div class="lb-row"><span class="lb-rank r3">3</span><div class="lb-av" style="background:linear-gradient(135deg,var(--fox),#c47000)">JL</div><span class="lb-name">Jin_Lee</span><span class="lb-flag">🇰🇷</span><div class="lb-xp-wrap"><span class="lb-xp">980 XP</span><span class="lb-streak">🔥 28</span></div></div>
+          <div class="lb-row"><span class="lb-rank">4</span><div class="lb-av" style="background:linear-gradient(135deg,var(--red),#cc2a2a)">AB</div><span class="lb-name">Ahmed_B</span><span class="lb-flag">🇸🇦</span><div class="lb-xp-wrap"><span class="lb-xp">870 XP</span><span class="lb-streak">🔥 19</span></div></div>
+          <div class="lb-row"><span class="lb-rank">5</span><div class="lb-av" style="background:linear-gradient(135deg,var(--blue),var(--blue-dk))">PN</div><span class="lb-name">Pierre_N</span><span class="lb-flag">🇫🇷</span><div class="lb-xp-wrap"><span class="lb-xp">760 XP</span><span class="lb-streak">🔥 15</span></div></div>
+          <div class="lb-row"><span class="lb-rank">6</span><div class="lb-av" style="background:linear-gradient(135deg,var(--green),var(--green-lt))">LM</div><span class="lb-name">Lila_M</span><span class="lb-flag">🇮🇳</span><div class="lb-xp-wrap"><span class="lb-xp">650 XP</span><span class="lb-streak">🔥 11</span></div></div>
+          <div class="lb-row"><span class="lb-rank">7</span><div class="lb-av" style="background:linear-gradient(135deg,#2B70C9,#1a4d8a)">GV</div><span class="lb-name">Giulia_V</span><span class="lb-flag">🇮🇹</span><div class="lb-xp-wrap"><span class="lb-xp">540 XP</span><span class="lb-streak">🔥 8</span></div></div>
+          <div class="lb-row me"><span class="lb-rank">8</span><div class="lb-av" style="background:linear-gradient(135deg,var(--green),var(--green-lt))">KM<div class="online-dot"></div></div><span class="lb-name">Kamu ⬅</span><span class="lb-flag">🇮🇩</span><div class="lb-xp-wrap"><span class="lb-xp">320 XP</span><span class="lb-streak">🔥 14</span></div></div>
+          <div class="lb-row"><span class="lb-rank">9</span><div class="lb-av" style="background:linear-gradient(135deg,#FFC800,#e6b400)">TS</div><span class="lb-name">Tanaka_S</span><span class="lb-flag">🇯🇵</span><div class="lb-xp-wrap"><span class="lb-xp">300 XP</span><span class="lb-streak">🔥 6</span></div></div>
+          <div class="lb-row"><span class="lb-rank">10</span><div class="lb-av" style="background:linear-gradient(135deg,var(--beetle),#a855cc)">EM</div><span class="lb-name">Emma_M</span><span class="lb-flag">🇩🇪</span><div class="lb-xp-wrap"><span class="lb-xp">270 XP</span><span class="lb-streak">🔥 4</span></div></div>
+        </div>
+        <div class="lb-table-footer">
+          <span class="lb-tf-info">30 pemain di liga ini</span>
+          <button class="lb-tf-btn">Lihat Semua</button>
+        </div>
+      </div>
+
+      <!-- Achievements -->
+      <div class="achieve-strip">
+        <div class="achieve-title">🏅 Pencapaian Leaderboard Kamu</div>
+        <div class="achieve-row">
+          <div class="achieve-badge"><div class="achieve-ico earned">🥇</div><div class="achieve-lbl">Juara Liga</div></div>
+          <div class="achieve-badge"><div class="achieve-ico earned">🔥</div><div class="achieve-lbl">Streak 14</div></div>
+          <div class="achieve-badge"><div class="achieve-ico earned">⚡</div><div class="achieve-lbl">XP 1K+</div></div>
+          <div class="achieve-badge"><div class="achieve-ico locked">🏆</div><div class="achieve-lbl">Top 3</div></div>
+          <div class="achieve-badge"><div class="achieve-ico locked">💫</div><div class="achieve-lbl">Dunia Top 5</div></div>
+          <div class="achieve-badge"><div class="achieve-ico locked">🌟</div><div class="achieve-lbl">Naik Liga</div></div>
+          <div class="achieve-badge"><div class="achieve-ico locked">👑</div><div class="achieve-lbl">Raja Liga</div></div>
+          <div class="achieve-badge"><div class="achieve-ico locked">🦅</div><div class="achieve-lbl">Streak 30</div></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer>
+    <div class="ft-logo">🦉 duolingo</div>
+    <div class="ft-links">
+      <span class="ft-link">📧 e-Complaint</span>
+      <span class="ft-link">ℹ️ Tentang Kami</span>
+      <span class="ft-link">📄 Syarat & Ketentuan</span>
+      <span class="ft-link">🔒 Privasi</span>
+    </div>
+    <div class="ft-socials">
+      <div class="ft-soc">🐦</div><div class="ft-soc">📘</div><div class="ft-soc">📸</div><div class="ft-soc">▶️</div>
+    </div>
+    <div class="ft-copy">© 2026 Duolingo Redesign Concept · Dibuat dengan ❤️ untuk pembelajaran bahasa</div>
+  </footer>
+
+</div>
+
+<nav class="mobile-nav">
+  <div class="mobile-nav-item"><span class="mn-icon">🏠</span><span>Beranda</span></div>
+  <div class="mobile-nav-item"><span class="mn-icon">🎯</span><span>Misi</span></div>
+  <div class="mobile-nav-item active"><span class="mn-icon">🏆</span><span>Liga</span></div>
+  <div class="mobile-nav-item"><span class="mn-icon">👤</span><span>Profil</span></div>
+  <div class="mobile-nav-item"><span class="mn-icon">🛒</span><span>Toko</span></div>
+</nav>
+
+<script src="script.js"></script>
+<script>
+  function switchTab(el, mode) {
+    document.querySelectorAll('.hero-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    if (window.innerWidth <= 768) {
+      const worldHd    = document.querySelector('.lb-section-hd.world');
+      const worldTable = document.querySelectorAll('.lb-table-wrap')[1];
+      const friendsHd  = document.querySelector('.lb-section-hd.friends');
+      const friendsTable = document.querySelectorAll('.lb-table-wrap')[0];
+      if (mode === 'world') {
+        worldHd.style.display = 'flex'; worldTable.style.display = 'flex';
+        friendsHd.style.display = 'none'; friendsTable.style.display = 'none';
+      } else {
+        worldHd.style.display = 'none'; worldTable.style.display = 'none';
+        friendsHd.style.display = 'flex'; friendsTable.style.display = 'flex';
+      }
+    }
+  }
+
+  // Generate stars
+  const starContainer = document.getElementById('stars');
+  for (let i = 0; i < 30; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    s.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;animation-delay:${Math.random()*4}s;animation-duration:${2+Math.random()*3}s;width:${1+Math.random()*3}px;height:${1+Math.random()*3}px;opacity:${Math.random()*.8}`;
+    starContainer.appendChild(s);
+  }
+</script>
+</body>
+</html>
